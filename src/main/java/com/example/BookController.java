@@ -6,6 +6,7 @@ import com.example.application.BookServiceImpl;
 import com.example.application.BookMapper;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -20,47 +21,53 @@ public class BookController {
     @Inject
     BookServiceImpl bookService;
 
+   @POST
+    public Response createBook(Book book){
+       bookService.createBook(book);
+       return Response.status(Response.Status.CREATED).build();
+   }
 
-    @GET
-    public List<BookDto> getAllBooks() {
-        List<Book> books = bookService.getAllBooks();
-        return books.stream()
-                .map(BookMapper::toDto)
-                .collect(Collectors.toList());
-    }
+   @GET
+    public List<Book> getAllBooks(){
+       return bookService.getAllBooks();
+   }
 
     @GET
     @Path("/{id}")
     public Response getBookById(@PathParam("id") Long id) {
-        Book book = bookService.getBookById(id)
-                .orElseThrow(() -> new NotFoundException("Book not found"));
-        BookDto bookDto = BookMapper.toDto(book);
-        return Response.ok(bookDto).build();
-    }
-
-    @POST
-    public Response createBook(@Valid BookDto bookDto) {
-        Book book = BookMapper.toEntity(bookDto);
-        Book createdBook = bookService.createBook(book);
-        BookDto createdBookDto = BookMapper.toDto(createdBook);
-        return Response.status(Response.Status.CREATED)
-                .entity(createdBookDto)
-                .build();
+        Book book = bookService.getBookById(id);
+        if (book != null) {
+            return Response.ok(book).build();
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
     }
 
     @PUT
     @Path("/{id}")
-    public Response updateBook(@PathParam("id") Long id, @Valid BookDto bookDto) {
-        Book book = BookMapper.toEntity(bookDto);
-        book.setId(id);
-        bookService.updateBook(book);
-        return Response.ok().build();
+    @Transactional
+    public Response updateBook(@PathParam("id") Long id, Book book) {
+        Book existingBook = bookService.getBookById(id);
+        if (existingBook != null) {
+            existingBook.setTitle(book.getTitle());
+            existingBook.setAuthor(book.getAuthor());
+            bookService.updateBook(existingBook);
+            return Response.ok().build();
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
     }
 
     @DELETE
     @Path("/{id}")
+    @Transactional
     public Response deleteBook(@PathParam("id") Long id) {
-        bookService.deleteBook(id);
-        return Response.ok().build();
+        Book existingBook = bookService.getBookById(id);
+        if (existingBook != null) {
+            bookService.deleteBook(id);
+            return Response.noContent().build();
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
     }
 }

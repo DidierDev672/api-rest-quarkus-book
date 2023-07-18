@@ -13,7 +13,7 @@ public class BookMapper {
 
     public static Book toEntity(BookDto bookDto) {
         Book book = new Book();
-        book.setId(bookDto.getId());
+        book.setId(book.getId());
         book.setTitle(bookDto.getTitle());
         book.setAuthor(bookDto.getAuthor());
         return book;

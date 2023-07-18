@@ -2,6 +2,7 @@ package com.example.application;
 
 import com.example.domain.model.Book;
 import com.example.domain.ports.BookRepository;
+import com.example.infrastructure.persistencia.BookDAO;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -9,33 +10,27 @@ import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
-public class BookServiceImpl implements BookService {
+public class BookServiceImpl {
     @Inject
-    BookRepository bookRepository;
+    BookDAO bookDAO;
 
-    @Override
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
+    public void createBook(Book book){
+        bookDAO.create(book);
     }
 
-    @Override
-    public Optional<Book> getBookById(Long id) {
-        return bookRepository.findById(id);
+    public  List<Book> getAllBooks(){
+        return bookDAO.findAll();
     }
 
-    @Override
-    public Book createBook(Book book) {
-        return bookRepository.save(book);
+    public Book getBookById(Long id){
+        return bookDAO.getById(id);
     }
 
-    @Override
-    public void updateBook(Book book) {
-        bookRepository.save(book);
+    public void updateBook(Book book){
+        bookDAO.update(book);
     }
 
-    @Override
-    public void deleteBook(Long id) {
-        Optional<Book> existingBook = bookRepository.findById(id);
-        existingBook.ifPresent(bookRepository::delete);
+    public void deleteBook(Long id){
+        bookDAO.delete(id);
     }
 }
